@@ -1,0 +1,7 @@
+node_modules
+dist
+data
+.git
+*.md
+SETUP.md
+HOW_TO_MODIFY.md

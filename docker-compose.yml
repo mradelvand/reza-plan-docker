@@ -1,0 +1,10 @@
+services:
+  reza-plan:
+    build: .
+    container_name: reza-plan
+    ports:
+      - "3000:3000"        # access the app at http://localhost:3000
+    volumes:
+      - ./data:/app/data   # your progress.json lives on YOUR machine, not inside the container
+                           # this means data survives container restarts, rebuilds, and updates
+    restart: unless-stopped

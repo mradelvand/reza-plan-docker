@@ -5,3 +5,4 @@ data
 *.md
 SETUP.md
 HOW_TO_MODIFY.md
+trivy-report.txt

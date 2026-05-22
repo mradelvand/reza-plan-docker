@@ -1,0 +1,19 @@
+{
+  "name": "reza-plan",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "reza-plan",
+  "workspaceFolder": "/app",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Reza Plan App",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postAttachCommand": {
+    "keepalive": "while true; do sleep 240; echo 'alive'; done"
+  },
+  "hostRequirements": {
+    "cpus": 2
+  }
+}

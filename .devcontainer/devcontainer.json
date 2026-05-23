@@ -1,8 +1,9 @@
 {
-  "name": "reza-plan",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "reza-plan",
-  "workspaceFolder": "/app",
+  "name": "reza-plan-dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
@@ -10,9 +11,7 @@
       "onAutoForward": "openBrowser"
     }
   },
-  "postAttachCommand": {
-    "keepalive": "while true; do sleep 240; echo 'alive'; done"
-  },
+  "postStartCommand": "docker compose up -d --build",
   "hostRequirements": {
     "cpus": 2
   }

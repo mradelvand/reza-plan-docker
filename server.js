@@ -122,7 +122,7 @@ app.get('/api/export', (req, res) => {
 });
 
 // ── Catch-all: serve React app for any non-API route ─────────────────────────
-app.get('*', (req, res) => {
+app.get('/{*path}', (req, res) => {
   const index = path.join(DIST, 'index.html');
   if (fs.existsSync(index)) {
     res.sendFile(index);

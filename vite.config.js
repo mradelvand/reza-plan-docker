@@ -8,7 +8,7 @@ export default defineConfig({
     strictPort: false,
     proxy: {
       // In dev mode: forward /api calls to the Express server on 3001
-      '/api': 'http://localhost:3001',
+      '/api': 'http://localhost:3000',
     },
   },
 })

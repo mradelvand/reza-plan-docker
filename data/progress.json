@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2026-05-25",
+    "duration": 120,
+    "tasks": [
+      "AWS VPC — videos or hands-on"
+    ],
+    "mood": "Ok",
+    "notes": "Watched: Create VPC (6 min)\nWatched: Subnets (3 min)\nWatched: Internet Gateway (2 min)\nWatched: Route Tables (4 min)\nWatched: NAT Gateway (6 min)\nWatched: Bastion Host (9 min)\nWatched: Website in VPC(14 min)",
+    "ts": 1780267988411
+  },
+  {
+    "date": "2026-05-22",
+    "duration": 90,
+    "tasks": [
+      "Docker — videos or hands-on lab"
+    ],
+    "mood": "",
+    "notes": "fixed the Codespace so now the app could be public on codespace",
+    "ts": 1779497467579
+  },
+  {
+    "date": "2026-05-18",
+    "duration": 90,
+    "tasks": [
+      "AWS free tier — hands-on practice"
+    ],
+    "mood": "Slow",
+    "notes": "VP design and setup - understanding - no hands on",
+    "ts": 1779194712871
+  },
+  {
+    "date": "2026-05-17",
+    "duration": 120,
+    "tasks": [
+      "Docker — videos or hands-on lab"
+    ],
+    "mood": "Good",
+    "notes": "Learned Docker multi-stage builds today — and fixed an Express 5 bug",
+    "ts": 1779044728220
+  }
+]

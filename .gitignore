@@ -4,3 +4,4 @@ dist/
 docker-series-part1.md
 trivy-report.txt
 data/progress.json
+data/weekplans.json

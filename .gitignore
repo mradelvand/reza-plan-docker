@@ -3,3 +3,4 @@ dist/
 .env
 docker-series-part1.md
 trivy-report.txt
+data/progress.json

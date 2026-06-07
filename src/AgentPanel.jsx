@@ -7,7 +7,7 @@ import {
 } from './storage.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TASK LIST — SC-900 removed
+// TASK LIST — SC-900 replaced by AZ-104 via azurecertprep.github.io
 // To add a task: copy a line, give it a new unique id, change the label.
 // Never change an existing id — old entries rely on it for display in History.
 //
@@ -18,16 +18,23 @@ import {
 //   b-review → gray   (reading, watching only)
 // ─────────────────────────────────────────────────────────────────────────────
 const TASKS = [
-  { id: 'monitoring', label: 'Monitoring — Prometheus / Grafana / Loki', badge: 'b-devops' },
-  { id: 'blog_write', label: 'Blog post — writing or drafting',          badge: 'b-blog'   },
-  { id: 'blog_pub',   label: 'Blog post — published live',               badge: 'b-blog'   },
-  { id: 'github',     label: 'GitHub — commit or project work',          badge: 'b-devops' },
-  { id: 'docker',     label: 'Docker — videos or hands-on lab',          badge: 'b-devops' },
-  { id: 'aws',        label: 'AWS free tier — hands-on practice',        badge: 'b-devops' },
-  { id: 'aws_vpc',    label: 'AWS VPC — videos or hands-on',             badge: 'b-devops' },
-  { id: 'killercoda', label: 'KillerCoda — K8s scenario',                badge: 'b-devops' },
-  { id: 'udemy',      label: 'Udemy — video watching only',              badge: 'b-review' },
-  { id: 'review',     label: 'Review / reading (no hands-on)',           badge: 'b-review' },
+  // ── Active work — update this list when you start a new section ──────────
+  // Rule: never change an existing id — old entries rely on it for History
+  { id: 'aws_vpc',    label: 'AWS VPC — videos or hands-on',                   badge: 'b-devops' },
+  { id: 'blog_write', label: 'Blog post — writing or drafting (Docusaurus)',    badge: 'b-blog'   },
+  { id: 'blog_pub',   label: 'Blog post — published live',                      badge: 'b-blog'   },
+  { id: 'github',     label: 'GitHub — commit or project work',                 badge: 'b-devops' },
+  { id: 'az104',      label: 'AZ-104 — azurecertprep.github.io challenge',      badge: 'b-cert'   },
+  { id: 'sadservers', label: 'SadServers — Linux troubleshooting scenario',     badge: 'b-devops' },
+  { id: 'killercoda', label: 'KillerCoda — K8s scenario',                       badge: 'b-devops' },
+  { id: 'udemy',      label: 'Udemy — video watching only',                     badge: 'b-review' },
+  { id: 'review',     label: 'Review / reading (no hands-on)',                  badge: 'b-review' },
+  // ── Completed — kept so History still shows them correctly ───────────────
+  { id: 'monitoring', label: 'Monitoring — Prometheus / Grafana / Loki',        badge: 'b-devops' },
+  { id: 'docker',     label: 'Docker — videos or hands-on lab',                 badge: 'b-devops' },
+  { id: 'aws',        label: 'AWS free tier — general practice',                badge: 'b-devops' },
+  // ── Uncomment when you start the next section ────────────────────────────
+  // { id: 'gitops', label: 'GitOps & EKS — lab or videos', badge: 'b-devops' },
 ];
 
 const MOODS = ['Stuck', 'Slow', 'Ok', 'Good', 'Great'];
@@ -516,15 +523,15 @@ export default function AgentPanel() {
 
 Context:
 - Full-time IT support/sysadmin, self-studying toward Cloud/DevSecOps
-- Background: CCNA, Entra ID/Intune, DevOps Udemy course ~65% done
-- Side job: soccer coach on Wednesdays (19:00–21:00) and Saturdays (07:30–09:15) — this is a real commitment, not an excuse
+- Background: CCNA, Entra ID/Intune (daily work), DevOps Udemy course ~65% done
+- Soccer coach: Wednesdays 19:00–21:00, Saturdays 07:30–09:15 — real commitment, already in the plan
 - Plan started Apr 19 2026. Entry date: ${entry.date}${isPast ? ' (backdated)' : ''}
-- Current status (May 2026): Monitoring ✓ done. Docker ✓ done (blog published). Now on AWS VPC section.
-- FREE TIER CONSTRAINT: NAT Gateway and RDS cost money — skip hands-on for those, watch-only
-- Blog at mradelvand.github.io — blog posts #3 (Monitoring) + #4 (Docker) published
+- DONE: Monitoring ✓ (blog published) · Docker ✓ (blog published) · reza-plan app containerized ✓
+- CURRENT: AWS VPC section — free tier only (NAT Gateway ~$1/day = skip hands-on, watch-only)
+- AZ-104 CERT: Running in parallel via azurecertprep.github.io — 1 challenge every Wednesday morning. Not a separate track — it's the Wednesday slot instead of SC-900.
+- BLOG TRANSITION: Moving from Jekyll (ansible format) to Docusaurus format (like entra-security-labs). New posts go into a Docusaurus site, not the old Jekyll blog. Goal: publish the VPC post in the new format.
 - Known challenge: perfectionism — delays publishing until everything feels 100%
-- SC-900 removed from plan entirely due to time constraints
-- Next certifications in plan: AZ-104 after Udemy done, then AZ-400 (AZ-104 prerequisite)
+- Study routine target: 1h morning (6–7am) + 1h evening (9–10pm) when possible; minimum 45min morning
 
 Entry for ${entry.date}:
 - Duration: ${entry.duration} min
@@ -552,12 +559,13 @@ Be direct, warm, specific. No generic quotes.`;
     const prompt = `Career coach doing a weekly review for Reza (mradelvand), Montreal IT → Cloud/DevSecOps.
 
 Today: ${todayStr()}. Plan started Apr 19 2026.
-DONE: Monitoring ✓, Docker ✓, blog posts #3 + #4 published.
-CURRENT: AWS VPC section (free tier only — NAT Gateway skip).
-NEXT: GitOps + EKS.
-SC-900 removed from plan.
-Soccer coaching: Wed 19:00–21:00, Sat 07:30–09:15 — real schedule constraint.
-Targets: 45–60 min/day × 5 available days. Blog 1 post per section.
+DONE: Monitoring ✓ · Docker ✓ · blog posts #3 + #4 published · reza-plan app containerized.
+CURRENT: AWS VPC section (free tier only — NAT Gateway ~$1/day = skip hands-on).
+NEXT: GitOps + EKS → CodePipeline → AZ-104 exam.
+AZ-104 PREP: Running in parallel via azurecertprep.github.io — 1 challenge every Wednesday morning slot.
+BLOG: Transitioning from Jekyll to Docusaurus format (entra-security-labs structure). New posts in Docusaurus.
+Soccer coaching: Wed 19:00–21:00, Sat 07:30–09:15 — real constraint already in the plan.
+Targets: 1h morning + 1h evening (Pro) or 45min morning (Basic). Blog 1 post per Udemy section.
 
 Last 14 days:
 ${recent || 'No entries.'}
@@ -589,7 +597,7 @@ Today: ${todayStr()}.
 DONE: Monitoring ✓, Docker ✓.
 CURRENT: AWS VPC.
 PLAN: VPC → GitOps/EKS → CodePipeline → done → AZ-104 → AZ-400.
-SC-900 removed.
+AZ-104 PREP: 1 challenge per Wednesday via azurecertprep.github.io (running in parallel).
 Soccer coaching Wed + Sat — permanent schedule constraint.
 
 Stats: days=${entries.filter(e=>e.duration>0).length}, total mins=${calcTotalMins(entries)}, blogs logged=${calcBlogCount(entries)} (+2 Ansible = ${calcBlogCount(entries)+2}), this month=${calcMonthMins(entries)} min.

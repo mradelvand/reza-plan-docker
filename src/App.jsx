@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import AgentPanel from './AgentPanel.jsx';
-import { SECTIONS, BASIC_WEEKS, PRO_WEEKS, POST_COURSE_ROADMAP } from './data.js';
+import { SECTIONS, BASIC_WEEKS, PRO_WEEKS, POST_COURSE_ROADMAP, AZ104_CHALLENGES } from './data.js';
 
 // ── Sidebar nav item ──
 function NavItem({ active, onClick, color, children }) {
@@ -300,15 +300,76 @@ function RoadmapPanel() {
   );
 }
 
+
+// ── AZ-104 Challenge Tracker ──
+function AZ104Panel() {
+  const [done, setDone] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('az104_done') || '[]'); } catch { return []; }
+  });
+
+  function toggle(n) {
+    const next = done.includes(n) ? done.filter(x => x !== n) : [...done, n];
+    setDone(next);
+    try { localStorage.setItem('az104_done', JSON.stringify(next)); } catch {}
+  }
+
+  const pct = Math.round(done.length / AZ104_CHALLENGES.length * 100);
+  const domains = [...new Set(AZ104_CHALLENGES.map(c => c.domain))];
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-title">AZ-104 challenge tracker</div>
+        <div className="ph-sub">azurecertprep.github.io — 1 challenge every Wednesday morning</div>
+      </div>
+      <div className="banner b-blue">
+        <strong>{done.length}/{AZ104_CHALLENGES.length} challenges done ({pct}%)</strong> — Target: complete all 28 by the time you book the AZ-104 exam.
+        Each challenge has real Azure CLI commands, break-and-fix scenarios, and exam-style questions.
+      </div>
+      <div style={{ background: 'var(--bg)', borderRadius: 'var(--rs)', height: 6, marginBottom: '1.25rem' }}>
+        <div style={{ height: 6, borderRadius: 'var(--rs)', background: '#185FA5', width: pct + '%', transition: 'width .3s' }} />
+      </div>
+      {domains.map(domain => (
+        <div key={domain} className="sec-block" style={{ marginBottom: 10 }}>
+          <div className="sec-hdr" style={{ cursor: 'default', background: 'transparent' }}>
+            <div className="sec-bar" style={{ background: '#185FA5' }} />
+            <div className="sec-info">
+              <div className="sec-title">{domain}</div>
+              <div className="sec-meta">
+                {AZ104_CHALLENGES.filter(c => c.domain === domain && done.includes(c.n)).length} / {AZ104_CHALLENGES.filter(c => c.domain === domain).length} done
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: '0 0 12px' }}>
+            {AZ104_CHALLENGES.filter(c => c.domain === domain).map(c => (
+              <div key={c.n} className="vrow" style={{ padding: '8px 16px', alignItems: 'center' }}>
+                <input type="checkbox" checked={done.includes(c.n)} onChange={() => toggle(c.n)}
+                  style={{ marginRight: 10, accentColor: '#185FA5', width: 15, height: 15, flexShrink: 0, cursor: 'pointer' }} />
+                <span className="vnum">ch{c.n}</span>
+                <span className="vtitle" style={{ flex: 1 }}>{c.title}</span>
+                <a href={c.url} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: 11, color: '#185FA5', textDecoration: 'none', padding: '2px 8px', border: '0.5px solid var(--border)', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                  Open lab ↗
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Resources ──
 function ResourcesPanel() {
   const items = [
-    { icon: '🎓', name: 'Udemy — DecodingDevOps', desc: '~35% remaining · Monitoring ✓ · Docker ✓ · Now: VPC → GitOps → CodePipeline', how: 'Watch at 1.25×. Pause before every command and type it yourself first. Free-tier only on AWS: no NAT Gateway, no RDS.' },
-    { icon: '⚙️', name: 'KillerCoda.com — free K8s labs', desc: 'Browser-based Kubernetes. No setup. Real kubectl. Start with "Kubernetes Basics" scenarios.', how: 'Start once you reach GitOps section (Wk 7+). One scenario per Saturday after main lab. Goal: comfort with kubectl before EKS.' },
-    { icon: '☁️', name: 'AWS Free Tier — your account', desc: 'EC2 t2.micro, S3, Lambda, VPC — free tier eligible. Set a billing alert at $5. Avoid NAT Gateway ($1/day) and RDS.', how: 'Terraform everything so you can destroy and recreate without cost. Every VPC video → deploy in your real account. Watch-only for paid services.' },
-    { icon: '✍️', name: 'mradelvand.github.io — your blog', desc: '4 posts live (Ansible ×2, Monitoring, Docker). Target: 1 post per section completed.', how: 'Write in plain language. Use Claude to structure raw notes — that\'s smart, not cheating. Publish at 80% ready, not 100%.' },
-    { icon: '🤖', name: 'Claude — daily study tool', desc: 'Quiz yourself, debug errors, structure blog posts, explain concepts differently.', how: '"Quiz me on VPC — 5 questions increasing difficulty" · "My EC2 can\'t reach internet: [paste security group config]" · "Here are my raw VPC lab notes — structure as a blog post."' },
-    { icon: '🔷', name: 'Microsoft Learn — AZ-104 (after Udemy)', desc: 'Free official path. Start only after Udemy 100% done. ~40h. Prerequisite for AZ-400.', how: 'Do not start yet. Add it to your calendar for July. Then: one module per day at 6am.' },
+    { icon: '🎓', name: 'Udemy — DecodingDevOps', desc: '~35% remaining · Monitoring ✓ · Docker ✓ · Now: VPC → GitOps → CodePipeline', how: 'Watch at 1.25×. Pause before every command and type it yourself. Free-tier only on AWS — no NAT Gateway ($1/day), no RDS.' },
+    { icon: '🔷', name: 'azurecertprep.github.io — AZ-104 challenges', desc: '28 hands-on challenges. Free. GitHub Codespaces provides the lab (60h/month free). No Azure subscription needed for most challenges.', how: 'Every Wednesday morning — open azurecertprep.github.io/docs/az-104/overview. Start challenge 01. Use Codespaces for the lab environment. This replaces SC-900 as the cert track.' },
+    { icon: '🖥️', name: 'SadServers.com — Linux troubleshooting', desc: 'Real broken servers in the browser. Fix it before the timer. "Like LeetCode for Linux." Free, no setup.', how: 'One scenario as warm-up (10–15 min) before your main session. Start at sadservers.com/scenario/saint-john — public, no signup needed.' },
+    { icon: '☁️', name: 'AWS Free Tier — your account', desc: 'EC2 t2.micro, S3, Lambda, VPC — free tier. Set billing alert at $5. Avoid NAT Gateway ($1/day) and RDS.', how: 'Terraform everything — destroy and recreate without cost. Watch-only for paid services.' },
+    { icon: '✍️', name: 'Docusaurus blogs — DevOps + Security labs', desc: 'New format: /docs/{category}/{post}. Faster to publish than Jekyll. entra-security-labs ✓ done. New DevOps posts go in a new Docusaurus site.', how: 'Paste raw notes to Claude → get formatted .md → git push → GitHub Actions deploys. See the blog template in Study Rules.' },
+    { icon: '⚙️', name: 'KillerCoda.com — free K8s labs', desc: 'Browser-based Kubernetes. No setup. Real kubectl. Start when GitOps section begins.', how: 'One scenario per Saturday after main lab. Goal: comfort with kubectl before EKS.' },
+    { icon: '🤖', name: 'Claude — daily study tool', desc: 'Quiz yourself, debug errors, generate Docusaurus blog posts from raw notes.', how: '"Quiz me on VPC — 5 questions" · "My EC2 can\'t reach internet: [paste config]" · "Convert these lab notes to a Docusaurus post."' },
   ];
   return (
     <div>
@@ -367,8 +428,9 @@ export default function App() {
     { id: 'weekly',    label: 'Weekly schedule',      color: '#BA7517' },
     { id: 'milestones',label: 'Milestones',           color: '#888780' },
     { id: 'roadmap',   label: 'Post-course roadmap',  color: '#BA7517' },
-    { id: 'resources', label: 'Resources',            color: '#888780' },
-    { id: 'rules',     label: 'Study rules',          color: '#185FA5' },
+    { id: 'az104',     label: 'AZ-104 tracker',        color: '#185FA5' },
+    { id: 'resources', label: 'Resources',             color: '#888780' },
+    { id: 'rules',     label: 'Study rules',           color: '#185FA5' },
   ];
 
   return (
@@ -400,9 +462,9 @@ export default function App() {
 
           <div className="prog-wrap">
             {[
-              { label: 'Monitoring ✓', pct: 100, color: '#1D9E75' },
-              { label: 'Docker ✓', pct: 100, color: '#1D9E75' },
-              { label: 'AWS VPC (current)', pct: 15, color: '#D85A30' },
+              { label: 'Monitoring ✓ · Docker ✓', pct: 100, color: '#1D9E75' },
+              { label: 'AWS VPC (current)', pct: 25, color: '#D85A30' },
+              { label: 'AZ-104 (1/28 challenges)', pct: 4, color: '#185FA5' },
               { label: 'Blog posts (4/8)', pct: 50, color: '#BA7517' },
             ].map(p => (
               <div key={p.label} className="prog-item">
@@ -425,6 +487,7 @@ export default function App() {
         <div className={`panel ${page === 'weekly'     ? 'active' : ''}`}><WeeklyPanel mode={mode} /></div>
         <div className={`panel ${page === 'milestones' ? 'active' : ''}`}><MilestonesPanel /></div>
         <div className={`panel ${page === 'roadmap'    ? 'active' : ''}`}><RoadmapPanel /></div>
+        <div className={`panel ${page === 'az104'      ? 'active' : ''}`}><AZ104Panel /></div>
         <div className={`panel ${page === 'resources'  ? 'active' : ''}`}><ResourcesPanel /></div>
         <div className={`panel ${page === 'rules'      ? 'active' : ''}`}><RulesPanel /></div>
       </main>

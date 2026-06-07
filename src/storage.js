@@ -1,14 +1,11 @@
 /**
- * storage.js
- *
- * All data is stored in data/progress.json on your computer via the
- * local Express server (server.js). Nothing goes to the internet.
- *
- * The React app calls these functions to load and save entries.
- * If the server is not running, functions return empty data gracefully.
+ * storage.js — all data persistence via the local Express server
+ * Data lives in data/progress.json and data/weekplans.json on your machine.
+ * Nothing goes to the internet.
  */
 
-// ── Load all entries from the local server ───────────────────────────────────
+// ── Progress entries ──────────────────────────────────────────────────────────
+
 export async function loadEntries() {
   try {
     const res = await fetch('/api/entries');
@@ -20,7 +17,6 @@ export async function loadEntries() {
   }
 }
 
-// ── Save a single entry (the server handles upsert by date) ──────────────────
 export async function saveEntry(entry) {
   try {
     const res = await fetch('/api/entries', {
@@ -35,26 +31,55 @@ export async function saveEntry(entry) {
   }
 }
 
-// ── Fetch the weekly export text (for pasting to Claude) ─────────────────────
+// ── Week plans ────────────────────────────────────────────────────────────────
+
+export async function loadWeekPlans() {
+  try {
+    const res = await fetch('/api/weekplans');
+    if (!res.ok) return {};
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
+
+export async function saveWeekPlan(weekOf, plan) {
+  try {
+    const res = await fetch('/api/weekplans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekOf, plan }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ── Weekly export text ────────────────────────────────────────────────────────
+
 export async function fetchExport() {
   try {
     const res = await fetch('/api/export');
     if (!res.ok) return 'Error fetching export.';
     return await res.text();
   } catch {
-    return 'Could not reach server. Make sure both server.js and npm run dev are running.';
+    return 'Could not reach server. Make sure server.js is running (npm start).';
   }
 }
 
-// ── API key: still stored locally in localStorage (not sensitive data) ────────
+// ── API key (localStorage — not sensitive, just config) ───────────────────────
+
 export function loadApiKey() {
   return localStorage.getItem('reza_apikey_v1') || '';
 }
+
 export function saveApiKey(key) {
   localStorage.setItem('reza_apikey_v1', key);
 }
 
-// ── Date helpers ─────────────────────────────────────────────────────────────
+// ── Date helpers ──────────────────────────────────────────────────────────────
+
 export function todayStr() {
   return new Date().toLocaleDateString('en-CA');
 }
@@ -65,7 +90,7 @@ export function displayDate(str) {
   });
 }
 
-// ── Stat calculators — all pure functions, take entries array ─────────────────
+// ── Stat calculators ──────────────────────────────────────────────────────────
 
 export function calcStreak(entries) {
   let streak = 0;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AgentPanel from './AgentPanel.jsx';
-import { SECTIONS, BASIC_WEEKS, PRO_WEEKS } from './data.js';
+import { SECTIONS, BASIC_WEEKS, PRO_WEEKS, POST_COURSE_ROADMAP } from './data.js';
 
 // ── Sidebar nav item ──
 function NavItem({ active, onClick, color, children }) {
@@ -68,23 +68,30 @@ function DailyPanel({ mode }) {
     <div>
       <div className="ph">
         <div className="ph-title">Daily routine</div>
-        <div className="ph-sub">Switch between Basic and Pro in the sidebar. Pro is opt-in, not required — use it on good days.</div>
+        <div className="ph-sub">Switch between Basic and Pro in the sidebar. Soccer days (Wed + Sat) = morning-only or skip — that's fine.</div>
+      </div>
+
+      {/* Soccer schedule notice */}
+      <div className="banner b-amber">
+        <strong>Recurring soccer coaching blocks:</strong><br />
+        Wednesday: 19:00–21:00 · Saturday: 07:30–09:15<br />
+        On these days: study in the morning only, or take it as a rest day. Both are valid. The plan accounts for this.
       </div>
 
       {mode === 'basic' ? (
         <>
           <span className="mode-badge mb-basic">Basic mode — 45 min morning</span>
           <div className="banner b-teal">
-            <strong>Your fixed slot: 6:00–6:45am Mon–Thu · Saturday 9:00–11:00am</strong><br />
+            <strong>Your fixed slot: 6:00–6:45am Mon–Fri · skip or shorten on soccer days</strong><br />
             This is the minimum that keeps you moving. Consistency at Basic beats sporadic Pro sessions every time.
           </div>
           <div className="sched-grid">
             {[
               { name: 'Mon', cls: 'today', slot: '6:00–6:45am', sub: 'Watch + type commands' },
               { name: 'Tue', cls: '', slot: '6:00–6:45am', sub: 'Continue lab or next videos' },
-              { name: 'Wed', cls: '', slot: '6:00–6:45am', sub: 'SC-900 module' },
+              { name: 'Wed', cls: '', slot: '6:00–6:45am', sub: '⚽ Soccer 19–21 · morning only' },
               { name: 'Thu', cls: '', slot: '6:00–6:45am', sub: 'New section or review' },
-              { name: 'Sat', cls: '', slot: '9:00–11:00am', sub: 'Hands-on lab + blog post' },
+              { name: 'Sat', cls: '', slot: 'after 9:15am', sub: '⚽ Soccer 7:30–9:15 · rest after' },
             ].map(d => (
               <div key={d.name} className={`day ${d.cls}`}>
                 <div className="day-name">{d.name}</div>
@@ -106,37 +113,25 @@ function DailyPanel({ mode }) {
               ))}
             </div>
           </div>
-          <div className="session">
-            <div className="session-head"><span className="session-time">Saturday 9:00–11:00am</span><span className="session-tag st-lab">weekly lab + blog</span></div>
-            <div className="session-body">
-              {[
-                ['0–60 min', 'Hands-on: deploy what you watched Mon–Thu. Use AWS free tier or local VM. Take one screenshot.'],
-                ['60–90 min', 'Blog draft: paste your raw notes to Claude → ask for structure → edit in your voice → publish. Done is better than perfect.'],
-                ['90–110 min', 'Bi-weekly: open the weekly schedule tab. Did you hit the deliverable? Adjust next 2 weeks if needed.'],
-              ].map(([min, text]) => (
-                <div key={min} className="step"><span className="step-min">{min}</span><span>{text}</span></div>
-              ))}
-            </div>
-          </div>
           <div className="stat-row">
             <div className="stat"><div className="stat-n">270</div><div className="stat-l">min/week (Basic)</div></div>
-            <div className="stat"><div className="stat-n" style={{ color: 'var(--teal)' }}>Jun 6</div><div className="stat-l">course done (Basic)</div></div>
-            <div className="stat"><div className="stat-n">8+</div><div className="stat-l">blog posts by Jun 6</div></div>
+            <div className="stat"><div className="stat-n" style={{ color: 'var(--teal)' }}>Jun 30</div><div className="stat-l">course done (adjusted)</div></div>
+            <div className="stat"><div className="stat-n">8+</div><div className="stat-l">blog posts target</div></div>
           </div>
         </>
       ) : (
         <>
           <span className="mode-badge mb-pro">Pro mode — 1h morning + 1h evening</span>
           <div className="banner b-purple">
-            <strong>Pro is opt-in, not required.</strong> Use it on days with energy and a free evening. A week of Basic days beats two Pro days that burn you out. Switch in the sidebar when you start — not to feel guilty.
+            <strong>Pro is opt-in, not required.</strong> Soccer days are morning-only by default. A full Basic week beats two Pro days that burn you out.
           </div>
           <div className="sched-grid">
             {[
               { name: 'Mon', cls: 'today', slot: '6:00–7:00am', sub: 'Watch + hands-on\n9:00–10:00pm deploy' },
               { name: 'Tue', cls: '', slot: '6:00–7:00am', sub: 'Continue section\n9:00–10:00pm blog draft' },
-              { name: 'Wed', cls: '', slot: '6:00–7:00am', sub: 'SC-900 module\n9:00–10:00pm practice Q\'s' },
-              { name: 'Thu', cls: '', slot: '6:00–7:00am', sub: 'New section start\n9:00–10:00pm polish + publish' },
-              { name: 'Sat', cls: '', slot: '9:00–11:00am', sub: 'Bigger project or KillerCoda K8s' },
+              { name: 'Wed', cls: '', slot: '6:00–7:00am', sub: '⚽ Soccer 19–21\nEvening = skip' },
+              { name: 'Thu', cls: '', slot: '6:00–7:00am', sub: 'New section start\n9:00–10:00pm polish' },
+              { name: 'Sat', cls: '', slot: 'after 9:15am', sub: '⚽ Soccer ends 9:15\nRest or light review' },
             ].map(d => (
               <div key={d.name} className={`day ${d.cls}`}>
                 <div className="day-name">{d.name}</div>
@@ -145,39 +140,10 @@ function DailyPanel({ mode }) {
               </div>
             ))}
           </div>
-          <div className="session">
-            <div className="session-head"><span className="session-time">6:00–7:00am</span><span className="session-tag st-watch">morning — watch + hands-on</span></div>
-            <div className="session-body">
-              {[
-                ['0–5 min', 'Open laptop. Alarm is your start signal. Check yesterday\'s "tomorrow" note.'],
-                ['5–35 min', 'Watch 2–3 videos at 1.25×. Pause and type every command before the instructor does.'],
-                ['35–55 min', 'Deploy the concept in your environment (AWS free tier, local Docker, or VM). Take raw notes as you go.'],
-                ['55–60 min', 'Write one paragraph: "What I built, what failed, what I\'ll write tonight."'],
-              ].map(([min, text]) => (
-                <div key={min} className="step"><span className="step-min">{min}</span><span>{text}</span></div>
-              ))}
-            </div>
-          </div>
-          <div className="session">
-            <div className="session-head"><span className="session-time">9:00–10:00pm</span><span className="session-tag st-blog">evening — deploy + write</span></div>
-            <div className="session-body">
-              {[
-                ['0–5 min', 'Open your morning notes. You already did the hard part today.'],
-                ['5–30 min', 'Continue or finish the lab from morning. One working thing = done. No perfection needed.'],
-                ['30–55 min', 'Blog draft: paste raw notes + lab output to Claude → structure → edit 5 sentences in your voice → save draft.'],
-                ['55–60 min', 'Write tomorrow\'s "I will finish ___" note. Commit code to GitHub. Done.'],
-              ].map(([min, text]) => (
-                <div key={min} className="step"><span className="step-min">{min}</span><span>{text}</span></div>
-              ))}
-            </div>
-          </div>
-          <div className="banner b-amber">
-            <strong>Wednesday evening is always SC-900 — never lab work.</strong> Evening brain handles reading and practice questions. Save debugging for mornings.
-          </div>
           <div className="stat-row">
-            <div className="stat"><div className="stat-n">600</div><div className="stat-l">min/week (Pro)</div></div>
-            <div className="stat"><div className="stat-n" style={{ color: 'var(--purple)' }}>May 19</div><div className="stat-l">course done (Pro)</div></div>
-            <div className="stat"><div className="stat-n">14+</div><div className="stat-l">blog posts by May 19</div></div>
+            <div className="stat"><div className="stat-n">~480</div><div className="stat-l">min/week (Pro, soccer weeks)</div></div>
+            <div className="stat"><div className="stat-n" style={{ color: 'var(--purple)' }}>Jun 15</div><div className="stat-l">course done (Pro, adjusted)</div></div>
+            <div className="stat"><div className="stat-n">10+</div><div className="stat-l">blog posts (Pro)</div></div>
           </div>
         </>
       )}
@@ -192,16 +158,16 @@ function WeeklyPanel({ mode }) {
     <div>
       <div className="ph">
         <div className="ph-title">Weekly schedule</div>
-        <div className="ph-sub">Every 2nd Saturday: check the deliverable, slide the schedule if needed. No guilt — just adjust.</div>
+        <div className="ph-sub">Soccer blocks shown. Every Monday: use the "This Week" tab in Progress Coach to set your specific goal for that week.</div>
       </div>
       {mode === 'basic' ? (
         <>
-          <span className="mode-badge mb-basic">Basic mode — Jun 6 finish</span>
-          <div className="banner b-teal">Each week has one lab goal and one blog post. Hit the deliverable = move to the next section.</div>
+          <span className="mode-badge mb-basic">Basic mode — adjusted for soccer schedule</span>
+          <div className="banner b-teal">Docker ✓ done. Now on AWS VPC. Each week has one lab goal and one blog post target.</div>
           <div className="wtable-wrap">
             <table className="wtable">
               <thead>
-                <tr><th>Week</th><th>Mon / Tue</th><th>Wed</th><th>Thu</th><th>Saturday deliverable</th></tr>
+                <tr><th>Week</th><th>Mon / Tue</th><th>Wed (⚽ eve)</th><th>Thu</th><th>Saturday deliverable</th></tr>
               </thead>
               <tbody>
                 {weeks.map((w, i) => (
@@ -214,8 +180,8 @@ function WeeklyPanel({ mode }) {
                   </tr>
                 ))}
                 <tr className="finish-row">
-                  <td><div className="wday">Jun 6</div></td>
-                  <td colSpan={4}><strong>Basic mode: course 100% done. SC-900 booked. 8 blog posts. Phase 1 complete.</strong></td>
+                  <td><div className="wday">~Jun 30</div></td>
+                  <td colSpan={4}><strong>Course 100% done. 8 blog posts. Phase 1 complete. Start AZ-104 next.</strong></td>
                 </tr>
               </tbody>
             </table>
@@ -223,12 +189,12 @@ function WeeklyPanel({ mode }) {
         </>
       ) : (
         <>
-          <span className="mode-badge mb-pro">Pro mode — May 19 finish</span>
-          <div className="banner b-purple">Pro mode compresses the timeline by 2×. Evening session = deploy + write. Morning = video + initial hands-on.</div>
+          <span className="mode-badge mb-pro">Pro mode — soccer days = morning only</span>
+          <div className="banner b-purple">Pro mode compresses timeline. Wed evening always skipped (soccer). Sat morning only after 9:15.</div>
           <div className="wtable-wrap">
             <table className="wtable">
               <thead>
-                <tr><th>Week</th><th>Morning focus</th><th>Evening focus</th><th>Wed evening</th><th>Saturday deliverable</th></tr>
+                <tr><th>Week</th><th>Morning focus</th><th>Evening focus</th><th>Wed note</th><th>Saturday deliverable</th></tr>
               </thead>
               <tbody>
                 {weeks.map((w, i) => (
@@ -241,8 +207,8 @@ function WeeklyPanel({ mode }) {
                   </tr>
                 ))}
                 <tr className="finish-row">
-                  <td><div className="wday">May 19</div></td>
-                  <td colSpan={4}><strong>Pro mode: course complete in 2 weeks. SC-900 booked. 7–8 blog posts. Begin AZ-104 or GCP next.</strong></td>
+                  <td><div className="wday">~Jun 15</div></td>
+                  <td colSpan={4}><strong>Pro mode: course complete. 7–8 blog posts. Begin AZ-104 study next.</strong></td>
                 </tr>
               </tbody>
             </table>
@@ -253,18 +219,18 @@ function WeeklyPanel({ mode }) {
   );
 }
 
-// ── Milestones ──
+// ── Milestones ── updated, SC-900 removed, AZ-400 post-course
 function MilestonesPanel() {
   return (
     <div>
-      <div className="ph"><div className="ph-title">Milestones</div><div className="ph-sub">Where you are and where you're going. Honest dates.</div></div>
-      <div className="banner b-amber"><strong>You are not behind.</strong> 2 blog posts in 2 weeks = on pace. Ansible project = Phase 1 work. Starting monitoring this week puts you exactly on plan.</div>
+      <div className="ph"><div className="ph-title">Milestones</div><div className="ph-sub">Where you are and where you're going. Soccer coaching schedule accounted for.</div></div>
+      <div className="banner b-teal"><strong>Real status May 25:</strong> Monitoring ✓ done. Docker ✓ done + blog published. AWS VPC in progress. Schedule adjusted for soccer coaching on Wed + Sat.</div>
       {[
-        { color: '#1D9E75', date: '✓ Apr 19 – May 4, 2026', title: 'Done — weeks 1 & 2', items: ['Plan created, daily habit started', 'Ansible Lab 01 & 02 published on blog', 'Progress tracker + roadmap app built'] },
-        { color: '#BA7517', date: 'Basic: Jun 6 · Pro: May 19', title: 'Phase 1 complete — Udemy done', items: ['Udemy DecodingDevOps 100% done', 'Monitoring stack (Grafana + Prometheus + Loki) deployed', 'Docker project on Docker Hub', 'AWS VPC + EC2 built on free tier', 'GitOps pipeline running on EKS', 'SC-900 exam booked', '8+ blog posts live on mradelvand.github.io'] },
-        { color: '#D85A30', date: 'Target: Jul 31, 2026', title: 'SC-900 passed + AZ-104 started', items: ['SC-900 certificate in hand', 'AZ-104 study begun (Microsoft Learn path)', 'KillerCoda K8s scenarios 1–3 done', 'LinkedIn profile updated with new certs + projects'] },
-        { color: '#534AB7', date: 'Target: Oct 31, 2026', title: 'Phase 2 complete — job search ready', items: ['AZ-104 passed', '15–20 blog posts covering DevOps + Cloud + Security', 'Actively applying: Cloud Engineer / DevSecOps in Montreal', 'GitHub portfolio anchored by GitOps + EKS project'] },
-        { color: '#534AB7', date: 'Target: Dec 31, 2026', title: 'New role secured or offer in hand', items: ['CCNA + AZ-900 + SC-900 + AZ-104 certified', 'Portfolio: 20+ posts + 3 real projects on GitHub', 'Targeting $80–110K CAD Cloud/DevSecOps role in Montreal'] },
+        { color: '#1D9E75', date: '✓ Apr 19 – May 24, 2026', title: 'Done — weeks 1–5', items: ['Plan created, daily habit started', 'Ansible Lab 01 & 02 published on blog', 'Monitoring section complete (Grafana + Prometheus + Loki)', 'Docker section complete + blog post published', 'Progress tracker app built and deployed on Codespace'] },
+        { color: '#D85A30', date: 'Target: Jun 30, 2026', title: 'Phase 1 complete — Udemy done', items: ['AWS VPC + EC2 deployed on free tier (no NAT Gateway — costs money)', 'GitOps pipeline running on EKS (GitHub Actions + Terraform)', 'CodePipeline on Beanstalk done', '8+ blog posts live on mradelvand.github.io', 'Soccer schedule accounted for throughout'] },
+        { color: '#BA7517', date: 'Target: Aug 31, 2026', title: 'AZ-104 passed', items: ['AZ-104 study started after Udemy 100% done', 'Microsoft Learn free path + practice tests', 'AZ-104 exam booked and passed (~$250 CAD)', 'LinkedIn profile updated', 'KillerCoda K8s scenarios 1–3 done'] },
+        { color: '#534AB7', date: 'Target: Oct 31, 2026', title: 'AZ-400 passed — job search ready', items: ['AZ-400: DevOps Engineer Expert (MSLevelUp course — free, 10h, requires AZ-104 first)', 'CCNA + AZ-104 + AZ-400 = competitive Montreal candidate', 'Portfolio: 15–20 blog posts + GitOps + EKS project on GitHub', 'Actively applying: Cloud Engineer / DevSecOps in Montreal'] },
+        { color: '#534AB7', date: 'Target: Dec 31, 2026', title: 'New role secured or offer in hand', items: ['Targeting $80–110K CAD Cloud/DevSecOps in Montreal', 'Soccer coaching continues as side income — compatible with new role'] },
       ].map((m, i, arr) => (
         <div key={i} className="ml-row">
           <div className="ml-line">
@@ -282,15 +248,67 @@ function MilestonesPanel() {
   );
 }
 
+// ── Post-Course Roadmap ── NEW
+function RoadmapPanel() {
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-title">Post-Course Roadmap</div>
+        <div className="ph-sub">What comes after the Udemy course finishes. Don't jump to this — finish Udemy first.</div>
+      </div>
+
+      <div className="banner b-amber">
+        <strong>About MSLevelUp AZ-400 (the course you found):</strong><br />
+        This is the right course — but it requires AZ-104 as a prerequisite. AZ-400 is an Expert-level cert. Your Udemy hands-on work (GitOps, Docker, Monitoring) is exactly what makes AZ-400 feel easy later. The order below is correct. Don't skip ahead.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
+        {POST_COURSE_ROADMAP.map((item, i) => (
+          <div key={i} className="agent-card" style={{ borderLeft: `3px solid ${item.color}` }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: item.color, fontWeight: 600, whiteSpace: 'nowrap', marginTop: 2 }}>{item.phase}</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{item.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-h)', fontFamily: 'var(--mono)' }}>{item.timing} · {item.duration}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-m)', lineHeight: 1.7, marginBottom: 6 }}>{item.why}</div>
+            <div style={{ fontSize: 12, color: item.color, fontStyle: 'italic' }}>Resource: {item.resource}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="banner b-blue">
+        <strong>Rule for new resources you find:</strong> When you find something that looks interesting (like AZ-400), write it here instead of switching to it. Finish the current thing. Then evaluate at a natural transition point. Jumping early costs 2–3 weeks of context-switching every time.
+      </div>
+
+      <div className="agent-card">
+        <div className="form-label" style={{ marginBottom: 10 }}>Resources parked for later — do not start yet</div>
+        {[
+          { name: 'AZ-400: DevOps Engineer (MSLevelUp)', when: 'After AZ-104 passed', why: 'Needs AZ-104 first. Your Udemy work makes this cert straightforward.' },
+          { name: 'KillerCoda K8s scenarios', when: 'Saturdays, one per week from Wk 7 onward', why: 'Good K8s practice — add it as a Saturday activity once GitOps section starts.' },
+          { name: 'GCP vProfile Project (Udemy section 6)', when: 'Optional, after sections 1–4 done', why: 'Montreal is mostly AWS + Azure. Nice-to-have, not urgent.' },
+        ].map((r, i) => (
+          <div key={i} style={{ borderBottom: '0.5px solid var(--border)', padding: '8px 0', fontSize: 13 }}>
+            <div style={{ fontWeight: 500, marginBottom: 2 }}>{r.name}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-m)' }}>When: {r.when}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-h)' }}>{r.why}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Resources ──
 function ResourcesPanel() {
   const items = [
-    { icon: '🎓', name: 'Udemy — DecodingDevOps', desc: '43% remaining · 13h video · 6 sections prioritized in Course Sections tab', how: 'Watch at 1.25×. Pause before every command and type it yourself first. If something is broken — write it down and move on.' },
-    { icon: '🔷', name: 'Microsoft Learn — SC-900 (free)', desc: '~20 hours total. Covers identity, security, compliance — maps directly to your Entra ID + Intune work.', how: 'One module every Wednesday. Book the exam when you hit 85%+ on practice tests. Ask your employer — they may cover the ~$165 CAD fee.' },
-    { icon: '⚙️', name: 'KillerCoda.com — free K8s labs', desc: 'Browser-based Kubernetes. No setup. Real kubectl. Start with "Kubernetes Basics" scenarios.', how: 'One scenario per Saturday after your main lab. Goal is comfort with kubectl before the GitOps section — not passing CKA.' },
-    { icon: '☁️', name: 'AWS Free Tier — your account', desc: 'EC2 t2.micro, S3, Lambda, VPC, CloudWatch — all free tier eligible. You have this — use it.', how: 'Set a billing alert at $5. Terraform everything so you can destroy and recreate without cost. Every VPC video → deploy in your real account immediately.' },
-    { icon: '✍️', name: 'mradelvand.github.io — your blog', desc: '2 posts live (Ansible Lab 01 & 02). Target: 1 post per section (Basic) or 2 per section (Pro).', how: 'Write in plain language: "here\'s what I built, here\'s the error I hit, here\'s how I fixed it." Use Claude to structure raw notes — that\'s smart, not cheating.' },
-    { icon: '🤖', name: 'Claude — daily study tool', desc: 'Quiz yourself, debug errors, structure blog posts, explain concepts differently.', how: '"Quiz me on PromQL — 5 questions increasing difficulty" · "My Grafana can\'t find Prometheus: [paste config]" · "Here are my raw lab notes — structure as a blog post."' },
+    { icon: '🎓', name: 'Udemy — DecodingDevOps', desc: '~35% remaining · Monitoring ✓ · Docker ✓ · Now: VPC → GitOps → CodePipeline', how: 'Watch at 1.25×. Pause before every command and type it yourself first. Free-tier only on AWS: no NAT Gateway, no RDS.' },
+    { icon: '⚙️', name: 'KillerCoda.com — free K8s labs', desc: 'Browser-based Kubernetes. No setup. Real kubectl. Start with "Kubernetes Basics" scenarios.', how: 'Start once you reach GitOps section (Wk 7+). One scenario per Saturday after main lab. Goal: comfort with kubectl before EKS.' },
+    { icon: '☁️', name: 'AWS Free Tier — your account', desc: 'EC2 t2.micro, S3, Lambda, VPC — free tier eligible. Set a billing alert at $5. Avoid NAT Gateway ($1/day) and RDS.', how: 'Terraform everything so you can destroy and recreate without cost. Every VPC video → deploy in your real account. Watch-only for paid services.' },
+    { icon: '✍️', name: 'mradelvand.github.io — your blog', desc: '4 posts live (Ansible ×2, Monitoring, Docker). Target: 1 post per section completed.', how: 'Write in plain language. Use Claude to structure raw notes — that\'s smart, not cheating. Publish at 80% ready, not 100%.' },
+    { icon: '🤖', name: 'Claude — daily study tool', desc: 'Quiz yourself, debug errors, structure blog posts, explain concepts differently.', how: '"Quiz me on VPC — 5 questions increasing difficulty" · "My EC2 can\'t reach internet: [paste security group config]" · "Here are my raw VPC lab notes — structure as a blog post."' },
+    { icon: '🔷', name: 'Microsoft Learn — AZ-104 (after Udemy)', desc: 'Free official path. Start only after Udemy 100% done. ~40h. Prerequisite for AZ-400.', how: 'Do not start yet. Add it to your calendar for July. Then: one module per day at 6am.' },
   ];
   return (
     <div>
@@ -316,10 +334,10 @@ function RulesPanel() {
   const rules = [
     { hl: true, icon: '⏱', title: '80% done = done. Move on.', text: 'If it works at 80%, document what you built, write one line about what failed, and move to the next section. The broken verification in Lab 02 was worth 20 minutes to fix — not a week.' },
     { hl: true, icon: '🎯', title: 'One thing per session', text: 'Before opening the laptop, write: "Today I will finish ___." One specific thing. When it\'s done, close the laptop. This prevents 45 minutes of unfocused browsing.' },
+    { hl: false, icon: '🚫', title: 'No new resources until Udemy is done', text: 'Found AZ-400 on MSLevelUp? Good — it\'s in the roadmap. Found another course? Add it to the "Parked" list. Finish the Udemy course first. Jumping costs you 2–3 weeks every time.' },
     { hl: false, icon: '⌨️', title: 'Type before you watch', text: 'Pause the video before the instructor types a command. Try it yourself first. Being wrong forces your brain to engage. Correct answers you didn\'t earn don\'t stick.' },
-    { hl: false, icon: '🧠', title: 'Understand, don\'t memorize', text: 'If you can explain VPC + subnet + NAT gateway to a non-technical person, you understand it. Commands you can look up. Concepts you cannot. Your Excalidraw diagrams show you understand — trust that.' },
     { hl: false, icon: '📝', title: 'The blog post IS the learning', text: 'You don\'t fully understand something until you can write it plainly. Blog posts are not extra work after studying — they are the studying. Use Claude to help with structure; write the explanation yourself.' },
-    { hl: false, icon: '🔄', title: 'Bi-weekly plan refresh', text: 'Every second Saturday: check the weekly schedule. Did you hit the deliverable? If not — slide the schedule forward, no guilt. The plan adjusts to reality.' },
+    { hl: false, icon: '⚽', title: 'Soccer days are part of the plan', text: 'Wednesday evening and Saturday morning are blocked by soccer coaching. These are not failures. The plan accounts for them. A good Mon/Tue/Thu week is still a successful week.' },
   ];
   return (
     <div>
@@ -333,9 +351,6 @@ function RulesPanel() {
           </div>
         ))}
       </div>
-      <div className="banner b-blue" style={{ marginTop: '1.25rem' }}>
-        <strong>On Pro mode:</strong> Pro is not a commitment. It is an opportunity on days when you have energy and the evening is free. If you do Pro 2 days a week and Basic 2 days, that is 30% more study time than pure Basic. The toggle is there to help you — not judge you.
-      </div>
     </div>
   );
 }
@@ -346,13 +361,14 @@ export default function App() {
   const [mode, setMode] = useState('basic');
 
   const navItems = [
-    { id: 'agent', label: 'Progress coach', color: '#1D9E75' },
-    { id: 'daily', label: 'Daily routine', color: '#D85A30' },
-    { id: 'sections', label: 'Course sections', color: '#534AB7' },
-    { id: 'weekly', label: 'Weekly schedule', color: '#BA7517' },
-    { id: 'milestones', label: 'Milestones', color: '#888780' },
-    { id: 'resources', label: 'Resources', color: '#888780' },
-    { id: 'rules', label: 'Study rules', color: '#185FA5' },
+    { id: 'agent',     label: 'Progress coach',      color: '#1D9E75' },
+    { id: 'daily',     label: 'Daily routine',        color: '#D85A30' },
+    { id: 'sections',  label: 'Course sections',      color: '#534AB7' },
+    { id: 'weekly',    label: 'Weekly schedule',      color: '#BA7517' },
+    { id: 'milestones',label: 'Milestones',           color: '#888780' },
+    { id: 'roadmap',   label: 'Post-course roadmap',  color: '#BA7517' },
+    { id: 'resources', label: 'Resources',            color: '#888780' },
+    { id: 'rules',     label: 'Study rules',          color: '#185FA5' },
   ];
 
   return (
@@ -379,14 +395,15 @@ export default function App() {
             <button className={`mode-btn ${mode === 'pro' ? 'active-pro' : ''}`} onClick={() => setMode('pro')}>Pro</button>
           </div>
           <div className="mode-desc">
-            {mode === 'basic' ? '45 min morning · finish Jun 6' : '1h morning + 1h evening · finish May 19'}
+            {mode === 'basic' ? '45 min morning · finish ~Jun 30' : '1h morning + 1h evening · finish ~Jun 15'}
           </div>
 
           <div className="prog-wrap">
             {[
-              { label: 'Udemy course', pct: 57, color: '#1D9E75' },
-              { label: 'Phase 1', pct: 22, color: '#534AB7' },
-              { label: 'Blog posts (2/8)', pct: 25, color: '#BA7517' },
+              { label: 'Monitoring ✓', pct: 100, color: '#1D9E75' },
+              { label: 'Docker ✓', pct: 100, color: '#1D9E75' },
+              { label: 'AWS VPC (current)', pct: 15, color: '#D85A30' },
+              { label: 'Blog posts (4/8)', pct: 50, color: '#BA7517' },
             ].map(p => (
               <div key={p.label} className="prog-item">
                 <div className="prog-lbl"><span>{p.label}</span><span>{p.pct}%</span></div>
@@ -398,17 +415,18 @@ export default function App() {
       </nav>
 
       <main className="main">
-        <div className={`panel ${page === 'agent' ? 'active' : ''}`}><AgentPanel /></div>
-        <div className={`panel ${page === 'daily' ? 'active' : ''}`}><DailyPanel mode={mode} /></div>
-        <div className={`panel ${page === 'sections' ? 'active' : ''}`}>
-          <div className="ph"><div className="ph-title">Course sections — priority order</div><div className="ph-sub">13 hours of video remaining. Ordered by career value. Click to expand.</div></div>
-          <div className="banner b-teal">You learn by doing. Rule: pause the video → type the command yourself → move on. 80% working = done. The blog post is the proof of understanding.</div>
+        <div className={`panel ${page === 'agent'      ? 'active' : ''}`}><AgentPanel /></div>
+        <div className={`panel ${page === 'daily'      ? 'active' : ''}`}><DailyPanel mode={mode} /></div>
+        <div className={`panel ${page === 'sections'   ? 'active' : ''}`}>
+          <div className="ph"><div className="ph-title">Course sections — priority order</div><div className="ph-sub">Monitoring ✓ done · Docker ✓ done · VPC is current. Click to expand.</div></div>
+          <div className="banner b-teal">Free-tier alert on AWS VPC: NAT Gateway (~$1/day) and RDS cost money. Skip hands-on for those — watch-only is fine.</div>
           {SECTIONS.map(s => <SectionBlock key={s.id} sec={s} mode={mode} />)}
         </div>
-        <div className={`panel ${page === 'weekly' ? 'active' : ''}`}><WeeklyPanel mode={mode} /></div>
+        <div className={`panel ${page === 'weekly'     ? 'active' : ''}`}><WeeklyPanel mode={mode} /></div>
         <div className={`panel ${page === 'milestones' ? 'active' : ''}`}><MilestonesPanel /></div>
-        <div className={`panel ${page === 'resources' ? 'active' : ''}`}><ResourcesPanel /></div>
-        <div className={`panel ${page === 'rules' ? 'active' : ''}`}><RulesPanel /></div>
+        <div className={`panel ${page === 'roadmap'    ? 'active' : ''}`}><RoadmapPanel /></div>
+        <div className={`panel ${page === 'resources'  ? 'active' : ''}`}><ResourcesPanel /></div>
+        <div className={`panel ${page === 'rules'      ? 'active' : ''}`}><RulesPanel /></div>
       </main>
     </div>
   );

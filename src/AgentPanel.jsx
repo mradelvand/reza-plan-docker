@@ -7,9 +7,8 @@ import {
 } from './storage.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TASK LIST
+// TASK LIST — SC-900 removed
 // To add a task: copy a line, give it a new unique id, change the label.
-// To remove a task: delete the line.
 // Never change an existing id — old entries rely on it for display in History.
 //
 // badge colours:
@@ -25,12 +24,10 @@ const TASKS = [
   { id: 'github',     label: 'GitHub — commit or project work',          badge: 'b-devops' },
   { id: 'docker',     label: 'Docker — videos or hands-on lab',          badge: 'b-devops' },
   { id: 'aws',        label: 'AWS free tier — hands-on practice',        badge: 'b-devops' },
-  { id: 'sc900',      label: 'SC-900 — Microsoft Learn module',          badge: 'b-cert'   },
+  { id: 'aws_vpc',    label: 'AWS VPC — videos or hands-on',             badge: 'b-devops' },
   { id: 'killercoda', label: 'KillerCoda — K8s scenario',                badge: 'b-devops' },
   { id: 'udemy',      label: 'Udemy — video watching only',              badge: 'b-review' },
   { id: 'review',     label: 'Review / reading (no hands-on)',           badge: 'b-review' },
-  // Uncomment when you start GitOps section:
-  // { id: 'gitops', label: 'GitOps & EKS — lab or videos', badge: 'b-devops' },
 ];
 
 const MOODS = ['Stuck', 'Slow', 'Ok', 'Good', 'Great'];
@@ -41,6 +38,45 @@ const BADGE_COLORS = {
   'b-cert':   ['#FAECE7', '#993C1D'],
   'b-review': ['#F1EFE8', '#444441'],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEK PLAN STORAGE — saved to server (data/weekplans.json) so it syncs
+// across Codespace and Ubuntu via plan-save / plan-start.
+// Falls back to localStorage if server is unreachable.
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadWeekPlansFromServer() {
+  try {
+    const res = await fetch('/api/weekplans');
+    if (!res.ok) throw new Error('server error');
+    return await res.json();
+  } catch {
+    try { return JSON.parse(localStorage.getItem('reza_weekplans') || '{}'); }
+    catch { return {}; }
+  }
+}
+
+async function saveWeekPlanToServer(mondayStr, plan) {
+  try {
+    await fetch('/api/weekplans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekOf: mondayStr, plan }),
+    });
+  } catch { /* silent — localStorage backup below */ }
+  try {
+    const all = JSON.parse(localStorage.getItem('reza_weekplans') || '{}');
+    all[mondayStr] = plan;
+    localStorage.setItem('reza_weekplans', JSON.stringify(all));
+  } catch { /* ignore */ }
+}
+
+function getMondayOfCurrentWeek() {
+  const d = new Date();
+  const day = d.getDay(); // 0=Sun, 1=Mon ...
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  return monday.toLocaleDateString('en-CA');
+}
 
 // Last N days as dropdown options
 function buildDateOptions(days = 30) {
@@ -85,10 +121,233 @@ function ProgressBar({ value, max, color }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HELPERS for two-week view
+// ─────────────────────────────────────────────────────────────────────────────
+function getMondayOfWeek(offsetWeeks = 0) {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff + offsetWeeks * 7);
+  return d.toLocaleDateString('en-CA');
+}
+
+function getWeekMinsForMonday(mondayStr, entries) {
+  const monday = new Date(mondayStr + 'T12:00:00');
+  const sundayD = new Date(monday);
+  sundayD.setDate(monday.getDate() + 6);
+  const monStr = monday.toLocaleDateString('en-CA');
+  const sunStr = sundayD.toLocaleDateString('en-CA');
+  return entries.filter(e => e.date >= monStr && e.date <= sunStr).reduce((a, e) => a + (e.duration || 0), 0);
+}
+
+function getStudiedDaysForMonday(mondayStr, entries) {
+  const monday = new Date(mondayStr + 'T12:00:00');
+  let count = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    if (entries.some(e => e.date === d.toLocaleDateString('en-CA') && e.duration > 0)) count++;
+  }
+  return count;
+}
+
+const DEFAULT_DAYS = {
+  Mon: { blocked: false, blockNote: '', studyNote: '' },
+  Tue: { blocked: false, blockNote: '', studyNote: '' },
+  Wed: { blocked: true,  blockNote: '⚽ Soccer coaching 19:00–21:00', studyNote: '' },
+  Thu: { blocked: false, blockNote: '', studyNote: '' },
+  Fri: { blocked: false, blockNote: '', studyNote: '' },
+  Sat: { blocked: true,  blockNote: '⚽ Soccer coaching 07:30–09:15', studyNote: '' },
+  Sun: { blocked: false, blockNote: '', studyNote: '' },
+};
+
+function emptyPlan(mondayStr) {
+  return { weekOf: mondayStr, weeklyGoal: '', days: JSON.parse(JSON.stringify(DEFAULT_DAYS)), reviewNote: '', goalMet: null };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SINGLE WEEK CARD
+// ─────────────────────────────────────────────────────────────────────────────
+function WeekCard({ mondayStr, label, entries, isNext, allPlans, onPlanUpdate }) {
+  const [plan, setPlan] = useState(() => (allPlans && allPlans[mondayStr]) ? allPlans[mondayStr] : emptyPlan(mondayStr));
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (allPlans && allPlans[mondayStr]) setPlan(allPlans[mondayStr]);
+    else setPlan(emptyPlan(mondayStr));
+  }, [allPlans, mondayStr]);
+
+  function updatePlan(newPlan) {
+    setPlan(newPlan);
+    saveWeekPlanToServer(mondayStr, newPlan);
+    if (onPlanUpdate) onPlanUpdate(mondayStr, newPlan);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  }
+
+  function updateDay(day, field, value) {
+    updatePlan({ ...plan, days: { ...plan.days, [day]: { ...plan.days[day], [field]: value } } });
+  }
+
+  const weekMins = getWeekMinsForMonday(mondayStr, entries);
+  const studiedDays = getStudiedDaysForMonday(mondayStr, entries);
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayColors = { Mon: '#1D9E75', Tue: '#1D9E75', Wed: '#BA7517', Thu: '#1D9E75', Fri: '#534AB7', Sat: '#BA7517', Sun: '#888780' };
+
+  // Rollover: show if previous week goal was not met
+  const prevMondayStr = (() => {
+    const d = new Date(mondayStr + 'T12:00:00');
+    d.setDate(d.getDate() - 7);
+    return d.toLocaleDateString('en-CA');
+  })();
+  const prevPlan = (allPlans && allPlans[prevMondayStr]) ? allPlans[prevMondayStr] : null;
+  const showRollover = isNext && prevPlan && prevPlan.goalMet && prevPlan.goalMet !== 'Yes ✓' && prevPlan.weeklyGoal;
+
+  return (
+    <div style={{ flex: 1, minWidth: 300 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: isNext ? 'var(--purple-l)' : 'var(--teal-l)', color: isNext ? 'var(--purple-d)' : 'var(--teal-d)' }}>{label}</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-h)' }}>w/o {mondayStr}</span>
+        {saved && <span style={{ fontSize: 11, color: 'var(--teal-d)' }}>✓ saved</span>}
+      </div>
+
+      {/* Rollover banner */}
+      {showRollover && (
+        <div className="banner b-coral" style={{ marginBottom: 8, fontSize: 12 }}>
+          <strong>⚠ Rolled over from last week:</strong> {prevPlan.weeklyGoal}
+          {prevPlan.reviewNote && <div style={{ marginTop: 3, opacity: 0.85 }}>Note: {prevPlan.reviewNote}</div>}
+        </div>
+      )}
+
+      {/* Goal */}
+      <div className="agent-card" style={{ marginBottom: 8, padding: '10px 12px' }}>
+        <label className="form-label" style={{ marginBottom: 4 }}>{isNext ? '📋 Goal for next week' : '🎯 This week\'s goal'}</label>
+        <textarea className="form-textarea" value={plan.weeklyGoal || ''} onChange={e => updatePlan({ ...plan, weeklyGoal: e.target.value })}
+          placeholder={isNext ? 'e.g. VPC + EC2 live in AWS. Blog post drafted.' : 'What must be done by Sunday?'}
+          style={{ marginBottom: 0, minHeight: 52, fontSize: 12 }} />
+      </div>
+
+      {/* Progress bar — current week only */}
+      {!isNext && (
+        <div className="agent-card" style={{ marginBottom: 8, padding: '10px 12px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-m)', marginBottom: 4 }}>{weekMins} min logged · {studiedDays} days active</div>
+          <ProgressBar value={weekMins} max={270} color="var(--teal)" />
+          <div style={{ fontSize: 11, color: 'var(--text-h)', marginTop: 4 }}>
+            {weekMins >= 270 ? '✓ Basic target hit!' : `${270 - weekMins} min left for basic target`}
+          </div>
+        </div>
+      )}
+
+      {/* Days */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 8 }}>
+        {DAYS.map(day => {
+          const d = plan.days?.[day] || { blocked: false, blockNote: '', studyNote: '' };
+          return (
+            <div key={day} style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderLeft: `3px solid ${d.blocked ? 'var(--amber)' : dayColors[day]}`, borderRadius: 'var(--rs)', padding: '7px 10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: d.blocked ? 5 : 3 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, minWidth: 26 }}>{day}</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 11, color: d.blocked ? 'var(--amber-d)' : 'var(--text-m)' }}>
+                  <input type="checkbox" checked={!!d.blocked} onChange={e => updateDay(day, 'blocked', e.target.checked)} style={{ accentColor: 'var(--amber)', width: 12, height: 12 }} />
+                  {d.blocked ? 'Blocked' : 'Available'}
+                </label>
+              </div>
+              {d.blocked && (
+                <input type="text" value={d.blockNote || ''} onChange={e => updateDay(day, 'blockNote', e.target.value)}
+                  placeholder="Why? e.g. ⚽ Soccer 19:00–21:00"
+                  style={{ width: '100%', border: '0.5px solid var(--border)', borderRadius: 4, padding: '3px 7px', fontSize: 11, fontFamily: 'var(--font)', marginBottom: 4, background: 'var(--amber-l)', color: 'var(--amber-d)' }} />
+              )}
+              <input type="text" value={d.studyNote || ''} onChange={e => updateDay(day, 'studyNote', e.target.value)}
+                placeholder={d.blocked ? 'Study anyway? (optional)' : 'Plan — e.g. Watch 263–270 VPC videos'}
+                style={{ width: '100%', border: '0.5px solid var(--border)', borderRadius: 4, padding: '3px 7px', fontSize: 11, fontFamily: 'var(--font)', background: 'transparent', color: 'var(--text)' }} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* End of week review — current week only */}
+      {!isNext && (
+        <div className="agent-card" style={{ padding: '10px 12px' }}>
+          <label className="form-label" style={{ marginBottom: 6 }}>End of week — goal met?</label>
+          <div style={{ display: 'flex', gap: 5, marginBottom: 7, flexWrap: 'wrap' }}>
+            {['Yes ✓', 'Partially', 'No — rolled to next week'].map(opt => (
+              <button key={opt} onClick={() => updatePlan({ ...plan, goalMet: opt })}
+                style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, border: '0.5px solid var(--border)', background: plan.goalMet === opt ? 'var(--teal-l)' : 'transparent', color: plan.goalMet === opt ? 'var(--teal-d)' : 'var(--text-m)', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                {opt}
+              </button>
+            ))}
+          </div>
+          <textarea className="form-textarea" value={plan.reviewNote || ''} onChange={e => updatePlan({ ...plan, reviewNote: e.target.value })}
+            placeholder="What happened? What blocked you? What rolls to next week?"
+            style={{ marginBottom: 0, minHeight: 48, fontSize: 12 }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEK PLAN TAB — current week + next week side by side, plans saved to server
+// ─────────────────────────────────────────────────────────────────────────────
+function WeekPlanTab({ entries }) {
+  const currentMonday = getMondayOfWeek(0);
+  const nextMonday = getMondayOfWeek(1);
+  const today = new Date();
+  const dayName = today.toLocaleDateString('en-CA', { weekday: 'long' });
+  const isSun = today.getDay() === 0;
+
+  const [allPlans, setAllPlans] = useState({});
+  const [plansLoaded, setPlansLoaded] = useState(false);
+
+  useEffect(() => {
+    loadWeekPlansFromServer().then(plans => {
+      setAllPlans(plans || {});
+      setPlansLoaded(true);
+    });
+  }, []);
+
+  function handlePlanUpdate(mondayStr, plan) {
+    setAllPlans(prev => ({ ...prev, [mondayStr]: plan }));
+  }
+
+  const subtitle = isSun
+    ? 'Sunday — review this week and set next week\'s goal before Monday.'
+    : `${dayName} — current week left, plan next week on the right.`;
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-title">Week Planning</div>
+        <div className="ph-sub">{subtitle}</div>
+      </div>
+
+      {isSun && (
+        <div className="banner b-purple" style={{ marginBottom: '1rem' }}>
+          <strong>Sunday ritual:</strong> Mark this week done → set next week goal → check soccer blocks → ready for Monday.
+        </div>
+      )}
+
+      {!plansLoaded && <div style={{ color: 'var(--text-m)', fontSize: 13, padding: '1rem 0' }}>Loading week plans...</div>}
+
+      {plansLoaded && (
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <WeekCard mondayStr={currentMonday} label="This week" entries={entries} isNext={false} allPlans={allPlans} onPlanUpdate={handlePlanUpdate} />
+          <WeekCard mondayStr={nextMonday} label="Next week" entries={entries} isNext={true} allPlans={allPlans} onPlanUpdate={handlePlanUpdate} />
+        </div>
+      )}
+
+      <div className="banner b-blue" style={{ marginTop: '1rem' }}>
+        <strong>Sync:</strong> Plans save to <code>data/weekplans.json</code>. Run <code>plan-save</code> after planning, <code>plan-start</code> on the other machine to get latest.
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AgentPanel() {
-  const [tab, setTab] = useState('log');
+  const [tab, setTab] = useState('week');
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [serverOk, setServerOk] = useState(true);
@@ -257,12 +516,15 @@ export default function AgentPanel() {
 
 Context:
 - Full-time IT support/sysadmin, self-studying toward Cloud/DevSecOps
-- Background: CCNA, Entra ID/Intune, DevOps Udemy course ~57% done, AWS free tier active
+- Background: CCNA, Entra ID/Intune, DevOps Udemy course ~65% done
+- Side job: soccer coach on Wednesdays (19:00–21:00) and Saturdays (07:30–09:15) — this is a real commitment, not an excuse
 - Plan started Apr 19 2026. Entry date: ${entry.date}${isPast ? ' (backdated)' : ''}
-- Current status (May 2026): finished Monitoring section (videos + hands-on). Blog post not yet published. Docker Deep Dive is next.
-- Blog at mradelvand.github.io — 2 Ansible posts live
+- Current status (May 2026): Monitoring ✓ done. Docker ✓ done (blog published). Now on AWS VPC section.
+- FREE TIER CONSTRAINT: NAT Gateway and RDS cost money — skip hands-on for those, watch-only
+- Blog at mradelvand.github.io — blog posts #3 (Monitoring) + #4 (Docker) published
 - Known challenge: perfectionism — delays publishing until everything feels 100%
-- Study mode: Pro (1h morning + 1h evening) when possible, Basic (45 min) otherwise
+- SC-900 removed from plan entirely due to time constraints
+- Next certifications in plan: AZ-104 after Udemy done, then AZ-400 (AZ-104 prerequisite)
 
 Entry for ${entry.date}:
 - Duration: ${entry.duration} min
@@ -290,14 +552,18 @@ Be direct, warm, specific. No generic quotes.`;
     const prompt = `Career coach doing a weekly review for Reza (mradelvand), Montreal IT → Cloud/DevSecOps.
 
 Today: ${todayStr()}. Plan started Apr 19 2026.
-Current: Monitoring done, blog post pending, Docker Deep Dive next.
-Targets: 45–60 min/day × 5 days (Basic) or 1h+1h (Pro). Blog 1 post per section.
+DONE: Monitoring ✓, Docker ✓, blog posts #3 + #4 published.
+CURRENT: AWS VPC section (free tier only — NAT Gateway skip).
+NEXT: GitOps + EKS.
+SC-900 removed from plan.
+Soccer coaching: Wed 19:00–21:00, Sat 07:30–09:15 — real schedule constraint.
+Targets: 45–60 min/day × 5 available days. Blog 1 post per section.
 
 Last 14 days:
 ${recent || 'No entries.'}
 
 Weekly review (200–250 words):
-1. What pattern in the data? (honest)
+1. What pattern in the data? (honest — account for soccer days)
 2. Where is perfectionism showing up?
 3. One concrete routine adjustment for next week
 4. One thing to be genuinely proud of
@@ -319,8 +585,12 @@ Be a mentor, not a cheerleader. Use the actual data.`;
     ).join('\n');
     const prompt = `Career coach doing a monthly review for Reza (mradelvand), Montreal IT → Cloud/DevSecOps.
 
-Today: ${todayStr()}. Phase 1 goals: course 100%, SC-900, Monitoring+Docker+AWS VPC+GitOps projects, 8+ blog posts.
-Basic finish: Jun 6. Pro finish: May 19. Current: Monitoring done, Docker next.
+Today: ${todayStr()}.
+DONE: Monitoring ✓, Docker ✓.
+CURRENT: AWS VPC.
+PLAN: VPC → GitOps/EKS → CodePipeline → done → AZ-104 → AZ-400.
+SC-900 removed.
+Soccer coaching Wed + Sat — permanent schedule constraint.
 
 Stats: days=${entries.filter(e=>e.duration>0).length}, total mins=${calcTotalMins(entries)}, blogs logged=${calcBlogCount(entries)} (+2 Ansible = ${calcBlogCount(entries)+2}), this month=${calcMonthMins(entries)} min.
 
@@ -328,8 +598,8 @@ All entries (up to 31 days):
 ${recent || 'No entries.'}
 
 Monthly review (300–350 words):
-1. Pace: which mode tracking toward?
-2. Topic gaps?
+1. Pace accounting for soccer schedule — realistic projection
+2. Topic gaps or avoidance patterns?
 3. Perfectionism — improving or blocking? Specific example.
 4. Three actions for next month by career impact
 5. Honest projection: when job-search ready at this pace?`;
@@ -370,7 +640,7 @@ Monthly review (300–350 words):
     <div>
       <div className="ph">
         <div className="ph-title">Progress coach</div>
-        <div className="ph-sub">Daily log saved to your computer. Saturday: export summary → paste to Claude for weekly review.</div>
+        <div className="ph-sub">Monday: set your week goal. Daily: log your session. Saturday: export → paste to Claude for coaching.</div>
       </div>
 
       {/* Server status warning */}
@@ -401,12 +671,23 @@ Monthly review (300–350 words):
 
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 6, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        {[['log','Daily log'],['saturday','Saturday export'],['stats','Stats'],['history','History'],['weekly','Weekly AI'],['monthly','Monthly AI']].map(([id, label]) => (
+        {[
+          ['week','📅 This Week'],
+          ['log','Daily log'],
+          ['saturday','Saturday export'],
+          ['stats','Stats'],
+          ['history','History'],
+          ['weekly','Weekly AI'],
+          ['monthly','Monthly AI'],
+        ].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={tabBtn(id)}>{label}</button>
         ))}
       </div>
 
       {loading && <div style={{ color: 'var(--text-m)', fontSize: 13, padding: '1rem 0' }}>Loading entries from file...</div>}
+
+      {/* ═══ THIS WEEK ══════════════════════════════════════════════════════ */}
+      {!loading && tab === 'week' && <WeekPlanTab entries={entries} />}
 
       {/* ═══ DAILY LOG ═══════════════════════════════════════════════════════ */}
       {!loading && tab === 'log' && (
@@ -438,7 +719,7 @@ Monthly review (300–350 words):
               <option value="120">2h+ (Pro full session)</option>
             </select>
 
-            {/* Tasks — edit TASKS array at top of file to change these */}
+            {/* Tasks */}
             <label className="form-label">What did you work on?</label>
             <div className="check-list" style={{ marginBottom: '1rem' }}>
               {TASKS.map(task => (
@@ -460,7 +741,7 @@ Monthly review (300–350 words):
             {/* Notes */}
             <label className="form-label">Notes — what did you do? what blocked you?</label>
             <textarea className="form-textarea" value={notes} onChange={e => setNotes(e.target.value)}
-              placeholder="e.g. Finished Prometheus setup, Grafana running. Need to write the monitoring blog post. Will draft it tomorrow morning."
+              placeholder="e.g. Watched VPC videos 263–267. Understand subnets and IGW conceptually. Tried to create VPC in console — succeeded. Tomorrow: route tables + Terraform."
               style={{ marginBottom: '1rem' }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -486,10 +767,7 @@ Monthly review (300–350 words):
         </div>
       )}
 
-      {/* ═══ SATURDAY EXPORT ═════════════════════════════════════════════════
-          This is the main coaching workflow. No API key needed.
-          Every Saturday: click Generate → Copy → paste to Claude.
-          ══════════════════════════════════════════════════════════════════════ */}
+      {/* ═══ SATURDAY EXPORT ═════════════════════════════════════════════════ */}
       {!loading && tab === 'saturday' && (
         <div>
           <div className="banner b-teal" style={{ marginBottom: '1rem' }}>
@@ -544,11 +822,11 @@ Monthly review (300–350 words):
           </div>
 
           <div className="agent-card" style={{ marginBottom: '1rem' }}>
-            <div className="form-label" style={{ marginBottom: 8 }}>This week — target: 270 min (Basic) / 600 min (Pro)</div>
+            <div className="form-label" style={{ marginBottom: 8 }}>This week — target: 270 min (Basic) · soccer days = partial credit</div>
             <div style={{ fontSize: 13, marginBottom: 4 }}><strong style={{ fontFamily: 'var(--mono)' }}>{weekMins}</strong> / 270 min</div>
             <ProgressBar value={weekMins} max={270} color="var(--teal)" />
             <div style={{ fontSize: 11, color: 'var(--text-h)', marginTop: 4 }}>
-              {weekMins >= 600 ? '🔥 Pro week!' : weekMins >= 270 ? '✓ Basic week done!' : weekMins >= 180 ? 'Almost — one more session.' : 'Keep going.'}
+              {weekMins >= 270 ? '✓ Basic week done!' : weekMins >= 180 ? 'Almost — one more session.' : 'Keep going.'}
             </div>
           </div>
 
@@ -559,9 +837,26 @@ Monthly review (300–350 words):
           </div>
 
           <div className="agent-card" style={{ marginBottom: '1rem' }}>
-            <div className="form-label" style={{ marginBottom: 8 }}>Blog posts — target: 8 by Jun 6</div>
+            <div className="form-label" style={{ marginBottom: 8 }}>Blog posts — target: 8 total</div>
             <div style={{ fontSize: 13, marginBottom: 4 }}><strong style={{ fontFamily: 'var(--mono)' }}>{blogCount + 2}</strong> / 8 <span style={{ fontSize: 11, color: 'var(--text-h)' }}>(2 Ansible + {blogCount} logged)</span></div>
             <ProgressBar value={blogCount + 2} max={8} color="var(--amber)" />
+          </div>
+
+          {/* Section progress */}
+          <div className="agent-card" style={{ marginBottom: '1rem' }}>
+            <div className="form-label" style={{ marginBottom: 10 }}>Course section progress</div>
+            {[
+              { label: 'Monitoring', done: true },
+              { label: 'Docker', done: true },
+              { label: 'AWS VPC (current)', done: false, current: true },
+              { label: 'GitOps + EKS', done: false },
+              { label: 'CodePipeline', done: false },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '5px 0', borderBottom: '0.5px solid var(--border)', fontSize: 13 }}>
+                <span style={{ fontSize: 14 }}>{s.done ? '✓' : s.current ? '▶' : '○'}</span>
+                <span style={{ color: s.done ? 'var(--teal-d)' : s.current ? 'var(--coral-d)' : 'var(--text-m)', fontWeight: s.current ? 500 : 400 }}>{s.label}</span>
+              </div>
+            ))}
           </div>
 
           <div className="agent-card">
@@ -588,7 +883,7 @@ Monthly review (300–350 words):
         </div>
       )}
 
-      {/* ═══ HISTORY ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ HISTORY ══════════════════════════════════════════════════════════ */}
       {!loading && tab === 'history' && (
         <div className="agent-card">
           {entries.length === 0 ? (
@@ -636,7 +931,7 @@ Monthly review (300–350 words):
         </div>
       )}
 
-      {/* ═══ MONTHLY AI (optional — needs API key) ═══════════════════════════ */}
+      {/* ═══ MONTHLY AI (optional — needs API key) ════════════════════════════ */}
       {!loading && tab === 'monthly' && (
         <div>
           <div className="banner b-amber" style={{ marginBottom: '1rem' }}>

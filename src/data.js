@@ -1,8 +1,11 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTIONS — course content (SC-900 removed)
+// ─────────────────────────────────────────────────────────────────────────────
 export const SECTIONS = [
   {
-    id: 's1', color: '#1D9E75', badge: 'Priority 1', badgeStyle: { background: '#E1F5EE', color: '#0F6E56' },
+    id: 's1', color: '#1D9E75', badge: '✓ Done', badgeStyle: { background: '#E1F5EE', color: '#0F6E56' },
     title: '1 · Monitoring & Observability',
-    meta: '162 min video · Basic: ~1 week · Pro: ~3 days · Start: May 5',
+    meta: '162 min video · COMPLETE',
     whyFirst: 'Prometheus + Grafana + Loki is used at most companies right now. You can set this up at your current job. Interviewers ask about it constantly.',
     labBasic: 'A running Grafana dashboard showing metrics from one service. One screenshot on GitHub. One blog post.',
     labPro: 'Add Loki log ingestion + configure one Slack alert. Blog post with architecture diagram.',
@@ -23,11 +26,11 @@ export const SECTIONS = [
     ],
   },
   {
-    id: 's2', color: '#534AB7', badge: 'Priority 2', badgeStyle: { background: '#EEEDFE', color: '#3C3489' },
+    id: 's2', color: '#1D9E75', badge: '✓ Done', badgeStyle: { background: '#E1F5EE', color: '#0F6E56' },
     title: '2 · Docker Deep Dive',
-    meta: '128 min video · Basic: ~1 week · Pro: ~3 days · Start: ~May 12 (Basic) / May 8 (Pro)',
-    whyFirst: 'Docker is the foundation of GitOps and EKS (section 4). You need containers solid before the capstone.',
-    labBasic: 'Build a Docker image for any app. Push to Docker Hub. Blog post: "My first containerized app."',
+    meta: '128 min video · COMPLETE · Blog post published',
+    whyFirst: 'Docker is the foundation of GitOps and EKS (section 4). Containers solid = prerequisite done.',
+    labBasic: 'Build a Docker image for any app. Push to Docker Hub. Blog post: "My first containerized app." ✓',
     labPro: 'Containerize the monitoring stack from section 1 using Docker Compose. Multi-stage Dockerfile. Blog post with Compose file explained.',
     videos: [
       { n: 302, t: 'Docker Introduction', m: '19m' },
@@ -42,11 +45,23 @@ export const SECTIONS = [
     ],
   },
   {
-    id: 's3', color: '#D85A30', badge: 'Priority 3', badgeStyle: { background: '#FAECE7', color: '#993C1D' },
-    title: '3 · AWS VPC & Core Services',
-    meta: '166 min video · Basic: ~1 week · Pro: ~3 days · Start: ~May 19 (Basic) / May 10 (Pro)',
-    whyFirst: 'Your AWS free tier account is active. VPC + EC2 + Lambda = the three things every cloud engineer must know.',
-    labBasic: 'Build a VPC with public/private subnets + one EC2 in your AWS account. Terraform it. Blog post: "Production-like VPC on AWS free tier."',
+    id: 's3', color: '#D85A30', badge: '▶ Current', badgeStyle: { background: '#FAECE7', color: '#993C1D' },
+    title: '3 · AWS VPC & Core Services (Free-Tier Safe)',
+    meta: '166 min video · Basic: ~2 weeks · Started May 18',
+    whyFirst: 'VPC + EC2 = cloud fundamentals every employer asks about. Free tier covers everything you need here.',
+    labBasic: `FREE TIER ONLY — do not spin up NAT Gateway or RDS (they cost money).
+
+What you CAN build for free:
+• VPC with 1 public subnet + 1 private subnet
+• Internet Gateway attached to public subnet
+• EC2 t2.micro in public subnet (750h/month free)
+• Security groups as your firewall
+• SSH in, run a simple web server, done
+
+Skip or watch-only: NAT Gateway (costs ~$1/day), VPC Peering (watch only), RDS.
+
+Terraform the VPC so you can destroy and recreate without cost.
+Blog post: "Production-like VPC on AWS free tier."`,
     labPro: 'Add a bastion host + Lambda function + EC2 log shipping to CloudWatch. Blog post comparing AWS-native logs vs Loki.',
     videos: [
       { n: 263, t: 'VPC Introduction', m: '28m' },
@@ -57,10 +72,10 @@ export const SECTIONS = [
       { n: 268, t: 'Subnets', m: '3m' },
       { n: 269, t: 'Internet Gateway', m: '2m' },
       { n: 270, t: 'Route Tables', m: '4m' },
-      { n: 271, t: 'NAT Gateway', m: '6m' },
+      { n: 271, t: 'NAT Gateway (watch-only — costs money)', m: '6m' },
       { n: 272, t: 'Bastion Host', m: '9m' },
       { n: 273, t: 'Website in VPC', m: '14m' },
-      { n: 274, t: 'Peering', m: '11m' },
+      { n: 274, t: 'Peering (watch-only)', m: '11m' },
       { n: 275, t: 'Terraform for VPC', m: '13m' },
       { n: 276, t: 'EC2 Logs', m: '31m' },
       { n: 277, t: 'AWS Lambda', m: '19m' },
@@ -69,7 +84,7 @@ export const SECTIONS = [
   {
     id: 's4', color: '#BA7517', badge: 'Priority 4', badgeStyle: { background: '#FAEEDA', color: '#854F0B' },
     title: '4 · GitOps & EKS — Capstone',
-    meta: '126 min video · Basic: ~1 week · Pro: ~3 days · Start: ~May 26 (Basic) / May 13 (Pro)',
+    meta: '126 min video · Basic: ~1 week · After VPC done',
     whyFirst: 'This is the employer-visible project. GitHub Actions + Terraform + EKS auto-deploying on every commit. This one project can get you an interview.',
     labBasic: 'A working GitHub Actions pipeline that deploys to EKS. Public repo. Blog post: "GitOps pipeline from scratch."',
     labPro: 'Add the monitoring stack from section 1 to the EKS cluster. Blog series (2 posts): architecture + build walkthrough. Portfolio centrepiece.',
@@ -90,7 +105,7 @@ export const SECTIONS = [
   {
     id: 's5', color: '#888780', badge: 'Priority 5', badgeStyle: { background: '#F1EFE8', color: '#444441' },
     title: '5 · AWS CodePipeline / Beanstalk',
-    meta: '73 min video · Start: ~Jun 2 (Basic) / May 17 (Pro)',
+    meta: '73 min video · After GitOps done',
     whyFirst: 'AWS-native CI/CD. Less portable than GitHub Actions but good to know. Do after GitOps so the comparison clicks naturally.',
     labBasic: 'Deploy a simple app through CodePipeline to Beanstalk. Document the differences vs GitHub Actions.',
     labPro: 'Same as basic — this section is straightforward.',
@@ -129,71 +144,116 @@ export const SECTIONS = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BASIC WEEKS — updated, SC-900 removed, Docker done, VPC current
+// Dates adjusted for real progress as of May 25
+// ─────────────────────────────────────────────────────────────────────────────
 export const BASIC_WEEKS = [
   {
-    week: 'Wk 3', dates: 'May 5–10',
-    monTue: [['watch', '250–256 Prometheus + PromQL'], ['note', 'install Prometheus locally, run node exporter']],
-    wed: [['cert', 'SC-900 Identity module']],
-    thu: [['watch', '257–262 Grafana + Loki + alerts']],
-    deliverable: 'Grafana dashboard screenshot on GitHub + blog post #3',
+    week: 'Wk 1–2', dates: 'Done',
+    monTue: [['watch', 'Monitoring complete'], ['lab', 'Grafana + Prometheus + Loki running']],
+    wed: [['blog', 'Blog post #3 published']],
+    thu: [['watch', 'Docker complete']],
+    deliverable: '✓ Monitoring done · Docker done · Blog posts #3 + #4 published',
   },
   {
-    week: 'Wk 4', dates: 'May 12–17',
-    monTue: [['watch', '302–307 Docker basics → images']],
-    wed: [['cert', 'SC-900 Security concepts module']],
-    thu: [['watch', '308–310 Compose + multi-stage']],
-    deliverable: 'Docker image on Docker Hub + blog post #4',
+    week: 'Wk 5', dates: 'May 25–Jun 1',
+    monTue: [['watch', '263–270 VPC core: subnets, IGW, routes'], ['note', 'Skip 271 NAT Gateway in hands-on (costs $)']],
+    wed: [['note', '⚽ Soccer coaching 19:00–21:00 — study before or skip']],
+    thu: [['watch', '272–275 Bastion host + Terraform VPC']],
+    deliverable: 'VPC + public subnet + EC2 t2.micro live in AWS + Terraform code on GitHub',
   },
   {
-    week: 'Wk 5', dates: 'May 19–24',
-    monTue: [['watch', '263–271 VPC core (subnets, IGW, routes)']],
-    wed: [['cert', 'SC-900 Compliance module']],
-    thu: [['watch', '272–277 Bastion + EC2 logs + Lambda']],
-    deliverable: 'VPC + EC2 live in AWS free tier + blog post #5',
+    week: 'Wk 6', dates: 'Jun 2–8',
+    monTue: [['watch', '276–277 EC2 Logs + Lambda']],
+    wed: [['note', '⚽ Soccer — check schedule for this week']],
+    thu: [['blog', 'Blog post #5 — VPC on free tier']],
+    deliverable: 'Blog post #5 published · VPC section 100% done',
   },
   {
-    week: 'Wk 6', dates: 'May 26–31',
-    monTue: [['watch', '361–365 GitOps intro + Terraform']],
-    wed: [['cert', 'SC-900 Practice exam questions']],
+    week: 'Wk 7', dates: 'Jun 9–15',
+    monTue: [['watch', '361–365 GitOps intro + Terraform code']],
+    wed: [['watch', 'Continue GitOps section']],
     thu: [['watch', '366–368 Staging + main workflows']],
-    deliverable: 'GitHub Actions workflow running + blog post #6',
+    deliverable: 'GitHub Actions workflow running for first time',
   },
   {
-    week: 'Wk 7', dates: 'Jun 2–7',
-    monTue: [['watch', '369–371 EKS deploy + cleanup'], ['watch', '282–287 CodePipeline']],
-    wed: [['cert', 'SC-900 Full mock exam → book date']],
-    thu: [['lab', 'KillerCoda K8s scenario 1']],
-    deliverable: 'EKS deploy working · SC-900 booked · course 100%',
+    week: 'Wk 8', dates: 'Jun 16–22',
+    monTue: [['watch', '369–371 EKS deploy + cleanup']],
+    wed: [['lab', 'EKS pipeline live — full test']],
+    thu: [['blog', 'Blog post #6 — GitOps pipeline walkthrough']],
+    deliverable: 'EKS pipeline working · blog #6 published',
+  },
+  {
+    week: 'Wk 9', dates: 'Jun 23–29',
+    monTue: [['watch', '282–287 CodePipeline + Beanstalk']],
+    wed: [['lab', 'CodePipeline deploy working']],
+    thu: [['review', 'Portfolio review — GitHub + blog']],
+    deliverable: 'Course 100% complete · portfolio ready',
   },
 ];
 
 export const PRO_WEEKS = [
   {
-    week: 'Wk 3', dates: 'May 5–8',
-    morning: [['watch', '250–262 Full monitoring section']],
-    evening: [['deploy', 'Prometheus + Grafana + Loki running'], ['blog', 'Draft monitoring post']],
-    wed: [['cert', 'SC-900 Identity + security modules']],
-    deliverable: 'Dashboard + Slack alert + blog post #3 published',
+    week: 'Done', dates: 'Complete',
+    morning: [['watch', 'Monitoring + Docker complete']],
+    evening: [['blog', 'Blog posts #3 + #4 published']],
+    wed: [['note', 'Plan adjusted — soccer Wed evenings']],
+    deliverable: '✓ Monitoring + Docker done',
   },
   {
-    week: 'Wk 3–4', dates: 'May 9–12',
-    morning: [['watch', '302–310 Full Docker section']],
-    evening: [['deploy', 'Monitoring stack in Docker Compose'], ['blog', 'Draft Docker post']],
-    wed: [['cert', 'SC-900 Compliance module']],
-    deliverable: 'Docker Hub image + Compose file on GitHub + blog #4',
+    week: 'Wk 5', dates: 'May 25–29',
+    morning: [['watch', '263–275 VPC core + Terraform (skip 271 hands-on)']],
+    evening: [['deploy', 'VPC + EC2 t2.micro in AWS free tier']],
+    wed: [['note', '⚽ Soccer 19:00–21:00 — use morning only']],
+    deliverable: 'VPC + EC2 live + Terraform on GitHub',
   },
   {
-    week: 'Wk 4', dates: 'May 13–15',
-    morning: [['watch', '263–277 Full AWS VPC section']],
-    evening: [['deploy', 'VPC + EC2 + Lambda in real AWS'], ['blog', 'Draft VPC post']],
-    wed: [['cert', 'SC-900 Practice exam']],
-    deliverable: 'VPC live in AWS + Terraform code on GitHub + blog #5',
+    week: 'Wk 5–6', dates: 'May 30–Jun 5',
+    morning: [['watch', '276–277 EC2 Logs + Lambda']],
+    evening: [['blog', 'Draft VPC blog post']],
+    wed: [['note', '⚽ Soccer — morning session only']],
+    deliverable: 'Blog #5 published · VPC section done',
   },
   {
-    week: 'Wk 4–5', dates: 'May 16–19',
+    week: 'Wk 6–7', dates: 'Jun 6–15',
     morning: [['watch', '361–371 GitOps + EKS'], ['watch', '282–287 CodePipeline']],
-    evening: [['deploy', 'GitOps pipeline running on EKS'], ['blog', 'Series post 1 + 2']],
-    wed: [['cert', 'SC-900 Full mock → book exam']],
-    deliverable: 'EKS pipeline live · course 100% · SC-900 booked · 7–8 blog posts',
+    evening: [['deploy', 'GitOps pipeline running on EKS'], ['blog', 'Blog posts #6 + #7']],
+    wed: [['note', '⚽ Soccer — morning only on Wed']],
+    deliverable: 'EKS pipeline live · course 100% · 7 blog posts',
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST-COURSE ROADMAP — what comes after the Udemy course
+// AZ-400 from MSLevelUp is Phase 3 (needs AZ-104 first)
+// ─────────────────────────────────────────────────────────────────────────────
+export const POST_COURSE_ROADMAP = [
+  {
+    phase: 'Phase 2',
+    title: 'AZ-104 — Azure Administrator',
+    timing: 'Start after Udemy 100% done (~Jul 2026)',
+    why: 'AZ-104 is the prerequisite for AZ-400. It also makes you immediately more employable in Montreal where Azure dominates enterprise. ~40h study, exam ~$250 CAD.',
+    resource: 'Microsoft Learn free path (official) + free practice tests at learn.microsoft.com',
+    duration: '6–8 weeks',
+    color: '#534AB7',
+  },
+  {
+    phase: 'Phase 3',
+    title: 'AZ-400 — DevOps Engineer Expert (MSLevelUp)',
+    timing: 'After AZ-104 passed (~Sep 2026)',
+    why: 'THIS is the MSLevelUp course you found. It maps directly to your Udemy hands-on skills. By the time you do this, GitHub Actions + Terraform + EKS will already be in your muscle memory — the cert will feel like a formality. 10h self-paced + labs.',
+    resource: 'skillupwithlevelup.com — AZ-400 course (free with access code from employer or Microsoft partner)',
+    duration: '3–4 weeks prep',
+    color: '#BA7517',
+  },
+  {
+    phase: 'Job Search',
+    title: 'Apply in Montreal — Cloud Engineer / DevSecOps',
+    timing: 'Oct–Dec 2026',
+    why: 'CCNA + AZ-104 + AZ-400 + GitOps portfolio = competitive candidate in Montreal. Target $80–110K CAD.',
+    resource: 'LinkedIn, Workday, direct applications to companies using Azure + AWS in Montreal',
+    duration: 'Active search',
+    color: '#D85A30',
   },
 ];

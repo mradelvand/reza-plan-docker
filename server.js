@@ -1,17 +1,13 @@
 /**
  * server.js — production server for the containerized Reza's Plan app
  *
- * In production (Docker):
- *   - Serves the built React app from /dist as static files
- *   - Serves the API on the same port
- *   - Data is saved to /app/data/progress.json inside the container
- *     which is mounted as a volume so it persists
- *
  * Endpoints:
- *   GET  /api/entries   — load all entries
- *   POST /api/entries   — save one entry
- *   GET  /api/export    — plain-text weekly summary to paste to Claude
- *   GET  /*             — serves the React app (catch-all)
+ *   GET  /api/entries      — load all progress entries
+ *   POST /api/entries      — save one progress entry
+ *   GET  /api/weekplans    — load all week plans (for sync across machines)
+ *   POST /api/weekplans    — save one week plan
+ *   GET  /api/export       — plain-text weekly summary to paste to Claude
+ *   GET  /*                — serves the React app (catch-all)
  */
 
 import express from 'express';
@@ -22,11 +18,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// In Docker: data lives in /app/data (mounted as a volume)
-// Locally:   data lives next to server.js in ./data
-const DATA_FILE = path.join(__dirname, 'data', 'progress.json');
-
-const PORT = process.env.PORT || 3000;
+const DATA_FILE      = path.join(__dirname, 'data', 'progress.json');
+const WEEKPLANS_FILE = path.join(__dirname, 'data', 'weekplans.json');
+const PORT           = process.env.PORT || 3000;
 
 const app = express();
 app.use(cors());
@@ -67,6 +61,26 @@ app.post('/api/entries', (req, res) => {
   res.json({ ok: true, total: entries.length });
 });
 
+// ── GET /api/weekplans ────────────────────────────────────────────────────────
+app.get('/api/weekplans', (req, res) => {
+  try {
+    const data = JSON.parse(fs.readFileSync(WEEKPLANS_FILE, 'utf8'));
+    res.json(data);
+  } catch { res.json({}); }
+});
+
+// ── POST /api/weekplans ───────────────────────────────────────────────────────
+app.post('/api/weekplans', (req, res) => {
+  const { weekOf, plan } = req.body;
+  if (!weekOf || !plan) return res.status(400).json({ error: 'weekOf and plan required' });
+  let all = {};
+  try { all = JSON.parse(fs.readFileSync(WEEKPLANS_FILE, 'utf8')); } catch { /* new file */ }
+  all[weekOf] = plan;
+  fs.mkdirSync(path.dirname(WEEKPLANS_FILE), { recursive: true });
+  fs.writeFileSync(WEEKPLANS_FILE, JSON.stringify(all, null, 2), 'utf8');
+  res.json({ ok: true });
+});
+
 // ── GET /api/export ───────────────────────────────────────────────────────────
 app.get('/api/export', (req, res) => {
   const entries = readEntries();
@@ -92,7 +106,7 @@ app.get('/api/export', (req, res) => {
     '',
     '── THIS WEEK ──',
     `Active study days : ${weekDays} / 5 target`,
-    `Total time        : ${weekMins} min (Basic target: 270 min | Pro target: 600 min)`,
+    `Total time        : ${weekMins} min (Basic target: 270 min)`,
     '',
   ];
 
@@ -134,6 +148,7 @@ app.get('/{*path}', (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✓ Reza's Plan running at http://localhost:${PORT}`);
-  console.log(`  Data file : ${DATA_FILE}`);
-  console.log(`  Export    : http://localhost:${PORT}/api/export\n`);
+  console.log(`  Data file      : ${DATA_FILE}`);
+  console.log(`  Week plans     : ${WEEKPLANS_FILE}`);
+  console.log(`  Export         : http://localhost:${PORT}/api/export\n`);
 });
